@@ -1,12 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { useTRPC } from "@/trpc/client";
+import { Input } from "@/components/ui/input";
 
 const ClientGreeting = () => {
+  const [value, setValue] = useState("");
   const trpc = useTRPC();
 
   const invoke = useMutation(
@@ -21,7 +24,11 @@ const ClientGreeting = () => {
     <div>
       <div>
         <p>Client component</p>
-        <Button onClick={() => invoke.mutate({ text: "HELLOWs" })}>
+        <Input value={value} onChange={(e) => setValue(e.target.value)} />
+        <Button
+          onClick={() => invoke.mutate({ value: value })}
+          disabled={invoke.isPending}
+        >
           Invoke Function
         </Button>
       </div>
