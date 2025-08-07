@@ -1,19 +1,29 @@
 "use client";
 
+import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+
+import { Button } from "@/components/ui/button";
 import { useTRPC } from "@/trpc/client";
-import { useSuspenseQuery } from "@tanstack/react-query";
 
 const ClientGreeting = () => {
   const trpc = useTRPC();
-  const greeting = useSuspenseQuery(
-    trpc.hello.queryOptions({ text: "from tRPC" })
+
+  const invoke = useMutation(
+    trpc.invoke.mutationOptions({
+      onSuccess: () => {
+        toast.success("Function invoked successfully!");
+      }
+    })
   );
 
   return (
     <div>
       <div>
         <p>Client component</p>
-        {JSON.stringify(greeting.data)}
+        <Button onClick={() => invoke.mutate({ text: "HELLOWs" })}>
+          Invoke Function
+        </Button>
       </div>
     </div>
   );
