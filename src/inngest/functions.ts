@@ -1,17 +1,20 @@
-import { inngest } from "./client";
+import { Sandbox } from "@e2b/code-interpreter";
 import { openai, createAgent } from "@inngest/agent-kit";
 
-const model = openai({ model: "gpt-4.1" });
+import { inngest } from "./client";
+import { getSandbox } from "./utils";
 
-/* const deepSeek = deepseek({
-  model: "deepseek-chat",
-  apiKey: process.env.DEEPSEEK_API_KEY
-}); */
+const model = openai({ model: "gpt-4.1" });
 
 export const helloWorld = inngest.createFunction(
   { id: "hello-world" },
   { event: "test/hello.world" },
-  async ({ event }) => {
+  async ({ event, step }) => {
+    const sandboxId = await step.run("get-sandbox-id", async () => {
+      const sandbox = await Sandbox.create("vibe-land-nextjs");
+      return sandbox.sandboxId;
+    });
+
     const codeAgent = createAgent({
       name: "code-agent",
       system:
@@ -22,6 +25,12 @@ export const helloWorld = inngest.createFunction(
     const { output } = await codeAgent.run(`Write the following snippet 
       ${event.data.value}`);
 
-    return { message: output };
+    const sandboxUrl = await step.run("get-sandbox-url", async () => {
+      const sandbox = await getSandbox(sandboxId);
+      const host = sandbox.getHost(3000);
+      return `https://${host}`;
+    });
+
+    return { output, sandboxUrl };
   }
 );
