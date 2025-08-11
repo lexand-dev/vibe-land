@@ -5,9 +5,7 @@ import { Suspense } from "react";
 
 const Home = async () => {
   const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(
-    trpc.hello.queryOptions({ text: "from tRPC" })
-  );
+  void queryClient.prefetchQuery(trpc.messages.getMany.queryOptions());
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
