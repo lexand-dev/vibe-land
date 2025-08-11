@@ -1,3 +1,10 @@
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { getQueryClient, trpc } from "@/trpc/server";
+
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { ProjectView } from "@/modules/projects/ui/views/project-view";
+
 interface ProjectPageProps {
   params: Promise<{
     projectId: string;
@@ -5,13 +12,29 @@ interface ProjectPageProps {
 }
 
 const ProjectPage = async ({ params }: ProjectPageProps) => {
+  const queryClient = getQueryClient();
   const { projectId } = await params;
+
+  void queryClient.prefetchQuery(
+    trpc.projects.getOne.queryOptions({
+      id: projectId
+    })
+  );
+
+  void queryClient.prefetchQuery(
+    trpc.messages.getMany.queryOptions({
+      projectId
+    })
+  );
+
   return (
-    <div className="flex h-full w-full items-center justify-center">
-      <h1 className="text-2xl font-bold">Project Page</h1>
-      <p className="mt-4">Project ID: {projectId}</p>
-      {/* Additional project details can be rendered here */}
-    </div>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ErrorBoundary fallback={<p>Error!</p>}>
+        <Suspense fallback={<p>Loading Project...</p>}>
+          <ProjectView projectId={projectId} />
+        </Suspense>
+      </ErrorBoundary>
+    </HydrationBoundary>
   );
 };
 
